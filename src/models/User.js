@@ -9,6 +9,9 @@ const userSchema = new mongoose.Schema(
 
     firstName: { type: String, default: '' },
     name: { type: String, default: '' },
+    /** Unique handle for in-app mail lookup (auto-set from email if empty). */
+    username: { type: String, lowercase: true, trim: true, sparse: true },
+    blockedUserIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 
     goals: [{ type: String }],
     barriers: [{ type: String }],
@@ -65,6 +68,14 @@ userSchema.index(
   {
     unique: true,
     partialFilterExpression: { googleId: { $exists: true, $type: 'string' } },
+  }
+);
+
+userSchema.index(
+  { username: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { username: { $exists: true, $type: 'string', $ne: '' } },
   }
 );
 

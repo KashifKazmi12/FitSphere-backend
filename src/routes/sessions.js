@@ -42,10 +42,23 @@ router.post(
           difficulty,
         },
       });
+      const obj = session.toObject();
+      let exerciseCaloriesAdded = 0;
+      if (status === 'completed') {
+        let c = obj.metrics?.calories;
+        if (!Number.isFinite(c) || c <= 0) {
+          const tm = obj.metrics?.timeMinutes;
+          if (tm != null && tm > 0) {
+            c = estimateBurnedCalories(req.user, tm, obj.metrics?.difficulty || difficulty);
+          }
+        }
+        if (Number.isFinite(c) && c > 0) exerciseCaloriesAdded = Math.round(c);
+      }
       return res.status(201).json({
         sessionId: session._id.toString(),
         message: 'Session saved.',
-        session: session.toObject(),
+        session: obj,
+        exerciseCaloriesAdded,
       });
     } catch (e) {
       console.error(e);

@@ -7,6 +7,7 @@ const User = require('../models/User');
 const OnboardingDraft = require('../models/OnboardingDraft');
 const Subscription = require('../models/Subscription');
 const { mergeProfileBody } = require('../utils/mergeProfileBody');
+const { ensureUsername } = require('../utils/ensureUsername');
 
 const router = express.Router();
 
@@ -60,6 +61,7 @@ async function registerFromDraft(req, res) {
       passwordHash,
     });
     mergeDraftData(user, draft.data);
+    await ensureUsername(user);
     await user.save();
     await ensureSubscriptionForUser(user._id, user.subscriptionPlan);
     await OnboardingDraft.deleteOne({ _id: draft._id });
@@ -194,6 +196,7 @@ router.get('/google/callback', async (req, res) => {
         user.googleId = profile.sub;
       }
       mergeDraftData(user, draft.data);
+      await ensureUsername(user);
       await user.save();
       await ensureSubscriptionForUser(user._id, user.subscriptionPlan);
     } else {
@@ -203,6 +206,7 @@ router.get('/google/callback', async (req, res) => {
         googleId: profile.sub,
       });
       mergeDraftData(user, draft.data);
+      await ensureUsername(user);
       await user.save();
       await ensureSubscriptionForUser(user._id, user.subscriptionPlan);
     }

@@ -1,6 +1,8 @@
 const express = require('express');
+const User = require('../models/User');
 const { authRequired, loadUser } = require('../middleware/auth');
 const { mergeProfileBody } = require('../utils/mergeProfileBody');
+const { ensureUsername } = require('../utils/ensureUsername');
 const { sendNotificationPreferenceEnabledEmail } = require('../services/emailService');
 
 const router = express.Router();
@@ -14,7 +16,13 @@ function reminderSnapshot(user) {
   };
 }
 
-router.get('/', authRequired, loadUser, (req, res) => {
+router.get('/', authRequired, loadUser, async (req, res) => {
+  try {
+    await ensureUsername(req.user);
+    await req.user.save();
+  } catch (e) {
+    console.error('[profile] ensureUsername', e.message);
+  }
   const u = req.user.toObject();
   delete u.passwordHash;
   res.json({ user: u });
@@ -29,8 +37,19 @@ router.get('/me', authRequired, loadUser, (req, res) => {
 async function handleProfileUpdate(req, res) {
   try {
     const prevReminders = reminderSnapshot(req.user);
+    const prevUsername = req.user.username;
 
     mergeProfileBody(req.user, req.body);
+
+    if (req.body.username != null && String(req.body.username).trim() && req.user.username !== prevUsername) {
+      const clash = await User.findOne({
+        username: req.user.username,
+        _id: { $ne: req.user._id },
+      }).lean();
+      if (clash) {
+        return res.status(400).json({ error: 'That username is already taken.' });
+      }
+    }
     if (req.body.reminderPreferences && typeof req.body.reminderPreferences === 'object') {
       const rp = req.body.reminderPreferences;
       if (typeof rp.workoutReminders === 'boolean') {

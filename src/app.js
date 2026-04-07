@@ -10,6 +10,10 @@ const sessionsRoutes = require('./routes/sessions');
 const subscriptionsRoutes = require('./routes/subscriptions');
 const analyticsRoutes = require('./routes/analytics');
 const nutritionRoutes = require('./routes/nutrition');
+const catalogFoodRoutes = require('./routes/catalogFood');
+const catalogExerciseRoutes = require('./routes/catalogExercise');
+const checkInsRoutes = require('./routes/checkIns');
+const messagesRoutes = require('./routes/messages');
 const subscribeRoutes = require('./routes/subscribe');
 const stripeWebhook = require('./routes/stripeWebhook');
 const { authRequired, loadUser } = require('./middleware/auth');
@@ -51,6 +55,10 @@ app.use('/sessions', sessionsRoutes);
 app.use('/subscriptions', subscriptionsRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/nutrition', nutritionRoutes);
+app.use('/catalog/food', catalogFoodRoutes);
+app.use('/catalog/exercise', catalogExerciseRoutes);
+app.use('/check-ins', authRequired, loadUser, checkInsRoutes);
+app.use('/messages', authRequired, loadUser, messagesRoutes);
 app.use('/subscribe', authLimiter, authRequired, loadUser, subscribeRoutes);
 
 app.use((err, _req, res, _next) => {

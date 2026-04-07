@@ -5,6 +5,11 @@
 function mergeProfileBody(user, data) {
   if (!data || typeof data !== 'object') return;
 
+  if (data.username != null && String(data.username).trim()) {
+    const u = String(data.username).trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (u.length >= 3 && u.length <= 32) user.username = u;
+  }
+
   if (data.firstName) {
     user.firstName = String(data.firstName).trim();
     user.name = user.firstName;
