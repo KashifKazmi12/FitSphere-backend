@@ -18,6 +18,7 @@ const subscribeRoutes = require('./routes/subscribe');
 const stripeWebhook = require('./routes/stripeWebhook');
 const { authRequired, loadUser } = require('./middleware/auth');
 const rateLimit = require('express-rate-limit');
+const Callbacks = require('./models/callback');
 
 const app = express();
 
@@ -60,6 +61,18 @@ app.use('/catalog/exercise', catalogExerciseRoutes);
 app.use('/check-ins', authRequired, loadUser, checkInsRoutes);
 app.use('/messages', authRequired, loadUser, messagesRoutes);
 app.use('/subscribe', authLimiter, authRequired, loadUser, subscribeRoutes);
+//callback test - when callback is called, it will save the data to the database
+app.use('/callback', async (req, res) => {
+  //save the data to the database
+  //table callback with only logs json field.
+  const { logs } = req.body;
+  const callback = new Callbacks({ logs });
+  await callback.save();
+  return res.json({
+    ok: true,
+    message: 'Callback received',
+  });
+});
 
 app.use((err, _req, res, _next) => {
   console.error(err);
