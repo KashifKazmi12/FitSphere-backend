@@ -62,10 +62,11 @@ app.use('/check-ins', authRequired, loadUser, checkInsRoutes);
 app.use('/messages', authRequired, loadUser, messagesRoutes);
 app.use('/subscribe', authLimiter, authRequired, loadUser, subscribeRoutes);
 //callback test - when callback is called, it will save the data to the database
-app.use('/callback', async (req, res) => {
+//app.post
+app.post('/callback', async (req, res) => {
   //save the data to the database
   //table callback with only logs json field.
-  const { logs } = req.body;
+  const  logs  = req.body;
   const callback = new Callbacks({ logs });
   await callback.save();
   return res.json({
@@ -73,6 +74,7 @@ app.use('/callback', async (req, res) => {
     message: 'Callback received',
   });
 });
+
 
 app.use((err, _req, res, _next) => {
   console.error(err);
