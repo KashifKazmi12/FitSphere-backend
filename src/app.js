@@ -65,18 +65,24 @@ app.use('/subscribe', authLimiter, authRequired, loadUser, subscribeRoutes);
 //app.post
 app.post('/callback', async (req, res) => {
   try {
-    // Ensure body exists and is an object
-    if (!req.body || typeof req.body !== 'object') {
+    let logsToSave;
+    let isValid = req.body && typeof req.body === 'object';
+
+    if (!isValid) {
+      // Save the invalid payload in Callbacks as well
+      logsToSave = { error: 'Invalid logs payload', received: req.body };
+      const callback = new Callbacks({ logs: logsToSave });
+      await callback.save();
       return res.status(400).json({ ok: false, message: 'Invalid logs payload' });
+    } else {
+      logsToSave = req.body;
+      const callback = new Callbacks({ logs: logsToSave });
+      await callback.save();
+      return res.json({
+        ok: true,
+        message: 'Callback received',
+      });
     }
-    const logs = req.body;
-    // Save logs to the Callbacks model
-    const callback = new Callbacks({ logs });
-    await callback.save();
-    return res.json({
-      ok: true,
-      message: 'Callback received',
-    });
   } catch (err) {
     console.error('[fitsphere] Error in /callback:', err);
     res.status(500).json({
