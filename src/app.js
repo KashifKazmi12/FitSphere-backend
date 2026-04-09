@@ -64,15 +64,27 @@ app.use('/subscribe', authLimiter, authRequired, loadUser, subscribeRoutes);
 //callback test - when callback is called, it will save the data to the database
 //app.post
 app.post('/callback', async (req, res) => {
-  //save the data to the database
-  //table callback with only logs json field.
-  const  logs  = req.body;
-  const callback = new Callbacks({ logs });
-  await callback.save();
-  return res.json({
-    ok: true,
-    message: 'Callback received',
-  });
+  try {
+    // Ensure body exists and is an object
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ ok: false, message: 'Invalid logs payload' });
+    }
+    const logs = req.body;
+    // Save logs to the Callbacks model
+    const callback = new Callbacks({ logs });
+    await callback.save();
+    return res.json({
+      ok: true,
+      message: 'Callback received',
+    });
+  } catch (err) {
+    console.error('[fitsphere] Error in /callback:', err);
+    res.status(500).json({
+      ok: false,
+      message: 'Server error',
+      error: err.message,
+    });
+  }
 });
 
 
